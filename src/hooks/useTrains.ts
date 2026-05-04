@@ -7,16 +7,15 @@ interface UseTrainsResult {
     upcomingList: Train[]
 }
 
+export const filterTrains = (trains: Train[], now: Date): UseTrainsResult => {
+    const nowMin = now.getHours() * 60 + now.getMinutes()
+    const upcoming = trains.filter(t => t.hour * 60 + t.minute > nowMin)
+    const nextP0 = upcoming.find(t => t.platform === 0) ?? null
+    const nextP34 = upcoming.find(t => t.platform === 3 || t.platform === 4) ?? null
+    const upcomingList = upcoming.slice(0, 5)
+    return { nextP0, nextP34, upcomingList }
+}
+
 export const useTrains = (trains: Train[], now: Date): UseTrainsResult => {
-    return useMemo(() => {
-        const nowMin = now.getHours() * 60 + now.getMinutes()
-
-        const upcoming = trains.filter(t => t.hour * 60 + t.minute > nowMin)
-
-        const nextP0 = upcoming.find(t => t.platform === 0) ?? null
-        const nextP34 = upcoming.find(t => t.platform === 3 || t.platform === 4) ?? null
-        const upcomingList = upcoming.slice(0, 5)
-
-        return { nextP0, nextP34, upcomingList }
-    }, [trains, now])
+    return useMemo(() => filterTrains(trains, now), [trains, now])
 }

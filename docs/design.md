@@ -75,11 +75,11 @@
 
 | 要素 | 値 |
 |---|---|
-| padding | 10px 16px 4px |
-| 選択中バッジ | background `#006400`・color `#fff`・font-size 12px・font-weight 500・padding 4px 12px・border-radius 6px |
-| 非選択バッジ | background `rgba(255,255,255,0.07)`・color `#8a9bb5`・font-size 11px |
+| padding | 10px 16px 10px |
+| バッジ | background `#006400`・color `#fff`・font-size 12px・font-weight 500・padding 4px 12px・border-radius 6px |
+| 表示内容 | 今日のダイヤ区分を1つだけ表示（「平日」または「土・休日」） |
 | 自動切替 | 月〜金：平日・土日祝：土・休日 |
-| 手動切替 | タップで切替可能 |
+| 手動切替 | なし（タップ不可・cursor: default） |
 
 ---
 
@@ -278,7 +278,7 @@ export interface Timetable {
 | 言語 | TypeScript | v5.8.x |
 | ビルドツール | Vite | v8.x |
 | CSSフレームワーク | TailwindCSS | v4.x |
-| テスト | Vitest + React Testing Library | v4.x |
+| テスト | Vitest + React Testing Library | vitest v4.x |
 | PWA | vite-plugin-pwa | - |
 | ホスティング | Vercel（無料プラン） | - |
 | バージョン管理 | GitHub（Public） | - |
@@ -306,12 +306,18 @@ ayase-kitaayase-timetable/
 │   │   └── useTrains.ts           # 列車フィルタリング
 │   ├── utils/
 │   │   └── formatTime.ts          # 時刻・残り分フォーマット
+│   ├── test/
+│   │   ├── setup.ts               # テストセットアップ
+│   │   ├── formatTime.test.ts     # 時刻フォーマットテスト
+│   │   ├── useDayType.test.ts     # ダイヤ区分判定テスト
+│   │   └── useTrains.test.ts      # 列車フィルタリングテスト
 │   ├── App.tsx
 │   ├── index.css
 │   └── main.tsx
 ├── docs/
 │   ├── design.md                  # このファイル（設計書確定版）
-│   └── mock.html                  # HTMLモック
+│   ├── mock.html                  # HTMLモック
+│   └── images/                    # 画面イメージ
 ├── public/
 │   ├── icon-192.png
 │   └── icon-512.png
@@ -396,3 +402,4 @@ git push
 | 日付 | バージョン | 変更内容 |
 |---|---|---|
 | 2026-05-04 | 1.0 | 初版作成（実装・デプロイ完了後） |
+| 2026-05-04 | 1.1 | ダイヤバッジを切替ボタン→表示バッジのみに変更・ユニットテスト追加 |

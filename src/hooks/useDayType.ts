@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
 import type { DayType } from '../data/timetable'
 
-const isHoliday = (date: Date, holidays: Set<string>): boolean => {
+export const isHoliday = (date: Date, holidays: Set<string>): boolean => {
     const yyyy = date.getFullYear()
     const mm = (date.getMonth() + 1).toString().padStart(2, '0')
     const dd = date.getDate().toString().padStart(2, '0')
     return holidays.has(`${yyyy}-${mm}-${dd}`)
 }
 
-const detectDayType = (date: Date, holidays: Set<string>): DayType => {
+export const getDayType = (date: Date, holidays: Set<string>): DayType => {
     const day = date.getDay()
     if (day === 0 || day === 6) return 'holiday'
     if (isHoliday(date, holidays)) return 'holiday'
@@ -30,30 +30,17 @@ const fetchHolidays = async (year: number): Promise<Set<string>> => {
     }
 }
 
-interface UseDayTypeResult {
-    dayType: DayType
-    setDayType: (type: DayType) => void
-    isManual: boolean
-}
-
-export const useDayType = (now: Date): UseDayTypeResult => {
-    const [dayType, setDayTypeState] = useState<DayType>(() => {
+export const useDayType = (now: Date): { dayType: DayType } => {
+    const [dayType, setDayType] = useState<DayType>(() => {
         const day = now.getDay()
         return day === 0 || day === 6 ? 'holiday' : 'weekday'
     })
-    const [isManual, setIsManual] = useState(false)
 
     useEffect(() => {
-        if (isManual) return
         fetchHolidays(now.getFullYear()).then(holidays => {
-            setDayTypeState(detectDayType(now, holidays))
+            setDayType(getDayType(now, holidays))
         })
-    }, [now, isManual])
+    }, [now])
 
-    const setDayType = (type: DayType) => {
-        setDayTypeState(type)
-        setIsManual(true)
-    }
-
-    return { dayType, setDayType, isManual }
+    return { dayType }
 }

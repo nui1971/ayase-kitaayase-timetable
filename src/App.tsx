@@ -13,7 +13,7 @@ const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土']
 
 function App() {
     const now = useCurrentTime()
-    const { dayType, setDayType } = useDayType(now)
+    const { dayType } = useDayType(now)
 
     const trains = timetable[dayType]
     const { nextP0, nextP34, upcomingList } = useTrains(trains, now)
@@ -31,7 +31,7 @@ function App() {
             style={{ fontFamily: 'sans-serif' }}
         >
             <Header time={time} date={date} />
-            <DayBadge dayType={dayType} onChange={setDayType} />
+            <DayBadge dayType={dayType} />
 
             <div className="px-3 pt-[10px] flex-1">
                 <div className="text-[10px] font-medium text-[#4a6580] tracking-[0.06em] mt-2 mb-[6px]">
