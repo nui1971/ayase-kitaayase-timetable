@@ -1,9 +1,14 @@
 interface HeaderProps {
     time: string
     date: string
+    nextDate: string
+    isNextDay: boolean
+    hours: number
 }
 
-export const Header = ({ time, date }: HeaderProps) => {
+export const Header = ({ time, date, nextDate, isNextDay, hours }: HeaderProps) => {
+    const dateDisplay = isNextDay && hours >= 5 ? `${date} → 翌 ${nextDate}` : date
+
     return (
         <header className="px-4 pt-[14px] pb-[10px] border-b-[0.5px] border-b-white/8">
             <div className="flex justify-between items-start">
@@ -18,7 +23,7 @@ export const Header = ({ time, date }: HeaderProps) => {
                     <time className="block text-white text-[32px] font-light leading-none mb-0.5">
                         {time}
                     </time>
-                    <div className="text-[#8a9bb5] text-[11px]">{date}</div>
+                    <div className="text-[#8a9bb5] text-[11px]">{dateDisplay}</div>
                 </div>
             </div>
         </header>
