@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>綾瀬 → 北綾瀬 発車案内</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #060c18;
+    font-family: sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .app {
+    background: #0d1526;
+    width: 100%;
+    max-width: 390px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── ヘッダー ── */
+  .header {
+    padding: 14px 16px 10px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.08);
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .header-left {}
+  .c19-badge {
+    display: inline-block;
+    background: #006400;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    letter-spacing: 0.03em;
+  }
+  .station-ja {
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  .station-en {
+    color: #8a9bb5;
+    font-size: 11px;
+    margin-top: 2px;
+  }
+  .header-right {
+    text-align: right;
+  }
+  .current-time {
+    color: #fff;
+    font-size: 32px;
+    font-weight: 300;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .current-date {
+    color: #8a9bb5;
+    font-size: 11px;
+  }
+  .cal-bar {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .cal-btn {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+  }
+  .cal-btn.active {
+    background: #006400;
+    color: #fff;
+  }
+  .cal-btn.inactive {
+    background: rgba(255,255,255,0.07);
+    color: #8a9bb5;
+  }
+
+  /* ── ボディ ── */
+  .body {
+    padding: 10px 12px 0;
+    flex: 1;
+  }
+  .sec-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: #4a6580;
+    letter-spacing: 0.06em;
+    margin-top: 8px;
+    margin-bottom: 6px;
+  }
+
+  /* ── 次の列車カード ── */
+  .track-card {
+    display: flex;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    border: 0.5px solid rgba(255,255,255,0.06);
+  }
+  .card-line {
+    width: 3px;
+    flex-shrink: 0;
+  }
+  .card-line.orange { background: #e8703a; }
+  .card-line.green  { background: #22c55e; }
+  .card-inner {
+    flex: 1;
+    min-width: 0;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+  }
+  .card-header.orange { background: rgba(232,112,58,0.15); }
+  .card-header.green  { background: rgba(34,197,94,0.12); }
+  .track-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .track-dot.orange { background: #e8703a; }
+  .track-dot.green  { background: #22c55e; }
+  .track-name {
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .track-name.orange { color: #f5a07a; }
+  .track-name.green  { color: #7ec8a0; }
+  .track-sub {
+    font-size: 10px;
+    margin-left: auto;
+  }
+  .track-sub.orange { color: #8a5a40; }
+  .track-sub.green  { color: #3a7050; }
+  .card-body {
+    padding: 12px 14px;
+  }
+  .card-body.orange { background: rgba(10,8,6,0.85); }
+  .card-body.green  { background: rgba(6,10,8,0.85); }
+  .next-label {
+    font-size: 12px;
+    color: #4a9e6a;
+    margin-bottom: 6px;
+  }
+  .next-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .next-time {
+    font-size: 32px;
+    font-weight: 300;
+    color: #fff;
+    line-height: 1;
+  }
+
+  /* ── 種別バッジ ── */
+  .type-badge {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .badge-local { background: #3a4a5a; color: #c8d6e8; }
+  .badge-semi  { background: #1a3a7a; color: #90b8f0; }
+  .badge-exp   { background: #7a1a1a; color: #f09090; }
+
+  .next-remain {
+    margin-left: auto;
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    white-space: nowrap;
+  }
+  .remain-pre  { font-size: 11px; color: #4a9e6a; }
+  .remain-val  { font-size: 22px; font-weight: 500; color: #4a9e6a; line-height: 1; }
+  .remain-unit { font-size: 11px; color: #4a9e6a; }
+
+  /* ── 列車リスト ── */
+  .list-section {
+    margin-top: 4px;
+  }
+  .list-header {
+    font-size: 11px;
+    font-weight: 500;
+    color: #c8d6e8;
+    margin-bottom: 5px;
+  }
+  .list-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .list-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.04);
+  }
+  .platform-badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .pb-0  { background: rgba(232,112,58,0.2); color: #f5a07a; }
+  .pb-34 { background: rgba(34,197,94,0.15); color: #7ec8a0; }
+  .list-time {
+    font-size: 18px;
+    font-weight: 300;
+    color: #fff;
+    min-width: 46px;
+    flex-shrink: 0;
+  }
+  .list-badge {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .list-dest {
+    font-size: 11px;
+    color: #c8d6e8;
+    flex: 1;
+  }
+  .list-min {
+    font-size: 11px;
+    font-weight: 500;
+    color: #8a9bb5;
+    white-space: nowrap;
+  }
+
+  /* ── フッター ── */
+  .footer {
+    padding: 10px 16px 14px;
+    border-top: 0.5px solid rgba(255,255,255,0.06);
+    margin-top: 12px;
+  }
+  .footer-text {
+    font-size: 10px;
+    color: #4a6580;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ヘッダー -->
+  <div class="header">
+    <div class="header-top">
+      <div class="header-left">
+        <div class="c19-badge">C19</div>
+        <div class="station-ja">綾瀬</div>
+        <div class="station-en">Ayase → Kita-Ayase</div>
+      </div>
+      <div class="header-right">
+        <div class="current-time" id="clock">--:--</div>
+        <div class="current-date" id="date-display">----/--/-- (-)</div>
+      </div>
+    </div>
+    <div class="cal-bar">
+      <button class="cal-btn active" id="btn-weekday" onclick="setDayType('weekday')">平日</button>
+      <button class="cal-btn inactive" id="btn-holiday" onclick="setDayType('holiday')">土・休日</button>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="sec-label">ホーム別 次の列車</div>
+
+    <!-- 0番線カード -->
+    <div class="track-card">
+      <div class="card-line orange"></div>
+      <div class="card-inner">
+        <div class="card-header orange">
+          <div class="track-dot orange"></div>
+          <span class="track-name orange">0番線</span>
+          <span class="track-sub orange">綾瀬 ⇔ 北綾瀬 折り返し</span>
+        </div>
+        <div class="card-body orange">
+          <div class="next-label">次の列車</div>
+          <div class="next-row">
+            <span class="next-time" id="p0-time">--:--</span>
+            <span class="type-badge badge-local" id="p0-badge">普通</span>
+            <div class="next-remain">
+              <span class="remain-pre">あと&thinsp;</span>
+              <span class="remain-val" id="p0-remain">--</span>
+              <span class="remain-unit" id="p0-remain-unit">&thinsp;分</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3・4番線カード -->
+    <div class="track-card">
+      <div class="card-line green"></div>
+      <div class="card-inner">
+        <div class="card-header green">
+          <div class="track-dot green"></div>
+          <span class="track-name green">3・4番線</span>
+          <span class="track-sub green">千代田線 直通</span>
+        </div>
+        <div class="card-body green">
+          <div class="next-label" id="p34-label">次の列車（3番線）</div>
+          <div class="next-row">
+            <span class="next-time" id="p34-time">--:--</span>
+            <span class="type-badge" id="p34-badge">普通</span>
+            <div class="next-remain">
+              <span class="remain-pre">あと&thinsp;</span>
+              <span class="remain-val" id="p34-remain">--</span>
+              <span class="remain-unit" id="p34-remain-unit">&thinsp;分</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 列車リスト -->
+    <div class="list-section">
+      <div class="list-header">北綾瀬方面（5本）</div>
+      <div class="list-rows" id="train-list"></div>
+    </div>
+  </div>
+
+  <!-- フッター -->
+  <div class="footer">
+    <div class="footer-text">データ出典：東京メトロ（2026年3月14日改正）</div>
+  </div>
+
+</div>
+
+<script>
+/* ── 時刻表データ（静的ハードコード・モック用）
+   番線凡例: 0=折り返し, 3=3番線直通, 4=4番線直通
+   trainType: 'local'|'semi'|'express'
+─────────────────────────────────────── */
+const TIMETABLE = {
+  weekday: [
+    {h:5,m:4,platform:0,trainType:'local'},
+    {h:5,m:20,platform:3,trainType:'local'},
+    {h:5,m:31,platform:0,trainType:'local'},
+    {h:5,m:44,platform:4,trainType:'local'},
+    {h:5,m:55,platform:0,trainType:'local'},
+    {h:6,m:4,platform:3,trainType:'local'},
+    {h:6,m:14,platform:0,trainType:'local'},
+    {h:6,m:26,platform:4,trainType:'local'},
+    {h:6,m:33,platform:0,trainType:'local'},
+    {h:6,m:43,platform:3,trainType:'local'},
+    {h:6,m:51,platform:0,trainType:'local'},
+    {h:7,m:0,platform:4,trainType:'semi'},
+    {h:7,m:7,platform:0,trainType:'local'},
+    {h:7,m:14,platform:3,trainType:'local'},
+    {h:7,m:20,platform:0,trainType:'local'},
+    {h:7,m:26,platform:4,trainType:'semi'},
+    {h:7,m:32,platform:0,trainType:'local'},
+    {h:7,m:38,platform:3,trainType:'local'},
+    {h:7,m:44,platform:0,trainType:'local'},
+    {h:7,m:50,platform:4,trainType:'semi'},
+    {h:7,m:57,platform:0,trainType:'local'},
+    {h:8,m:3,platform:3,trainType:'local'},
+    {h:8,m:9,platform:0,trainType:'local'},
+    {h:8,m:16,platform:4,trainType:'semi'},
+    {h:8,m:23,platform:0,trainType:'local'},
+    {h:8,m:30,platform:3,trainType:'local'},
+    {h:8,m:37,platform:0,trainType:'local'},
+    {h:8,m:44,platform:4,trainType:'local'},
+    {h:8,m:51,platform:0,trainType:'local'},
+    {h:8,m:58,platform:3,trainType:'local'},
+    {h:9,m:5,platform:0,trainType:'local'},
+    {h:9,m:13,platform:4,trainType:'local'},
+    {h:9,m:21,platform:0,trainType:'local'},
+    {h:9,m:29,platform:3,trainType:'local'},
+    {h:9,m:37,platform:0,trainType:'local'},
+    {h:9,m:45,platform:4,trainType:'local'},
+    {h:9,m:53,platform:0,trainType:'local'},
+    {h:10,m:1,platform:3,trainType:'local'},
+    {h:10,m:9,platform:0,trainType:'local'},
+    {h:10,m:17,platform:4,trainType:'local'},
+    {h:10,m:25,platform:0,trainType:'local'},
+    {h:10,m:33,platform:3,trainType:'local'},
+    {h:10,m:41,platform:0,trainType:'local'},
+    {h:10,m:49,platform:4,trainType:'local'},
+    {h:10,m:57,platform:0,trainType:'local'},
+    {h:11,m:5,platform:3,trainType:'local'},
+    {h:11,m:13,platform:0,trainType:'local'},
+    {h:11,m:21,platform:4,trainType:'local'},
+    {h:11,m:29,platform:0,trainType:'local'},
+    {h:11,m:37,platform:3,trainType:'local'},
+    {h:11,m:45,platform:0,trainType:'local'},
+    {h:11,m:53,platform:4,trainType:'local'},
+    {h:12,m:1,platform:0,trainType:'local'},
+    {h:12,m:9,platform:3,trainType:'local'},
+    {h:12,m:17,platform:0,trainType:'local'},
+    {h:12,m:25,platform:4,trainType:'local'},
+    {h:12,m:33,platform:0,trainType:'local'},
+    {h:12,m:41,platform:3,trainType:'local'},
+    {h:12,m:49,platform:0,trainType:'local'},
+    {h:12,m:57,platform:4,trainType:'local'},
+    {h:13,m:5,platform:0,trainType:'local'},
+    {h:13,m:13,platform:3,trainType:'local'},
+    {h:13,m:21,platform:0,trainType:'local'},
+    {h:13,m:29,platform:4,trainType:'local'},
+    {h:13,m:37,platform:0,trainType:'local'},
+    {h:13,m:45,platform:3,trainType:'local'},
+    {h:13,m:53,platform:0,trainType:'local'},
+    {h:14,m:1,platform:4,trainType:'local'},
+    {h:14,m:9,platform:0,trainType:'local'},
+    {h:14,m:17,platform:3,trainType:'local'},
+    {h:14,m:25,platform:0,trainType:'local'},
+    {h:14,m:33,platform:4,trainType:'local'},
+    {h:14,m:41,platform:0,trainType:'local'},
+    {h:14,m:49,platform:3,trainType:'local'},
+    {h:14,m:57,platform:0,trainType:'local'},
+    {h:15,m:5,platform:4,trainType:'local'},
+    {h:15,m:13,platform:0,trainType:'local'},
+    {h:15,m:21,platform:3,trainType:'local'},
+    {h:15,m:29,platform:0,trainType:'local'},
+    {h:15,m:37,platform:4,trainType:'local'},
+    {h:15,m:45,platform:0,trainType:'local'},
+    {h:15,m:53,platform:3,trainType:'local'},
+    {h:16,m:1,platform:0,trainType:'local'},
+    {h:16,m:8,platform:4,trainType:'semi'},
+    {h:16,m:15,platform:0,trainType:'local'},
+    {h:16,m:22,platform:3,trainType:'semi'},
+    {h:16,m:29,platform:0,trainType:'local'},
+    {h:16,m:36,platform:4,trainType:'semi'},
+    {h:16,m:43,platform:0,trainType:'local'},
+    {h:16,m:50,platform:3,trainType:'semi'},
+    {h:16,m:57,platform:0,trainType:'local'},
+    {h:17,m:4,platform:4,trainType:'semi'},
+    {h:17,m:11,platform:0,trainType:'local'},
+    {h:17,m:18,platform:3,trainType:'semi'},
+    {h:17,m:25,platform:0,trainType:'local'},
+    {h:17,m:32,platform:4,trainType:'semi'},
+    {h:17,m:39,platform:0,trainType:'local'},
+    {h:17,m:46,platform:3,trainType:'semi'},
+    {h:17,m:53,platform:0,trainType:'local'},
+    {h:18,m:0,platform:4,trainType:'semi'},
+    {h:18,m:8,platform:0,trainType:'local'},
+    {h:18,m:16,platform:3,trainType:'semi'},
+    {h:18,m:24,platform:0,trainType:'local'},
+    {h:18,m:32,platform:4,trainType:'semi'},
+    {h:18,m:40,platform:0,trainType:'local'},
+    {h:18,m:48,platform:3,trainType:'semi'},
+    {h:18,m:56,platform:0,trainType:'local'},
+    {h:19,m:4,platform:4,trainType:'semi'},
+    {h:19,m:13,platform:0,trainType:'local'},
+    {h:19,m:22,platform:3,trainType:'semi'},
+    {h:19,m:31,platform:0,trainType:'local'},
+    {h:19,m:40,platform:4,trainType:'local'},
+    {h:19,m:49,platform:0,trainType:'local'},
+    {h:19,m:58,platform:3,trainType:'local'},
+    {h:20,m:7,platform:0,trainType:'local'},
+    {h:20,m:17,platform:4,trainType:'local'},
+    {h:20,m:27,platform:0,trainType:'local'},
+    {h:20,m:37,platform:3,trainType:'local'},
+    {h:20,m:47,platform:0,trainType:'local'},
+    {h:20,m:57,platform:4,trainType:'local'},
+    {h:21,m:7,platform:0,trainType:'local'},
+    {h:21,m:17,platform:3,trainType:'local'},
+    {h:21,m:27,platform:0,trainType:'local'},
+    {h:21,m:37,platform:4,trainType:'local'},
+    {h:21,m:48,platform:0,trainType:'local'},
+    {h:21,m:59,platform:3,trainType:'local'},
+    {h:22,m:10,platform:0,trainType:'local'},
+    {h:22,m:21,platform:4,trainType:'local'},
+    {h:22,m:32,platform:0,trainType:'local'},
+    {h:22,m:44,platform:3,trainType:'local'},
+    {h:22,m:56,platform:0,trainType:'local'},
+    {h:23,m:8,platform:4,trainType:'local'},
+    {h:23,m:21,platform:0,trainType:'local'},
+    {h:23,m:35,platform:3,trainType:'local'},
+    {h:23,m:50,platform:0,trainType:'local'},
+  ],
+  holiday: [
+    {h:5,m:16,platform:0,trainType:'local'},
+    {h:5,m:38,platform:3,trainType:'local'},
+    {h:5,m:55,platform:0,trainType:'local'},
+    {h:6,m:11,platform:4,trainType:'local'},
+    {h:6,m:30,platform:0,trainType:'local'},
+    {h:6,m:48,platform:3,trainType:'local'},
+    {h:7,m:7,platform:0,trainType:'local'},
+    {h:7,m:24,platform:4,trainType:'local'},
+    {h:7,m:41,platform:0,trainType:'local'},
+    {h:7,m:59,platform:3,trainType:'local'},
+    {h:8,m:16,platform:0,trainType:'local'},
+    {h:8,m:33,platform:4,trainType:'local'},
+    {h:8,m:50,platform:0,trainType:'local'},
+    {h:9,m:7,platform:3,trainType:'local'},
+    {h:9,m:24,platform:0,trainType:'local'},
+    {h:9,m:41,platform:4,trainType:'local'},
+    {h:9,m:58,platform:0,trainType:'local'},
+    {h:10,m:15,platform:3,trainType:'local'},
+    {h:10,m:32,platform:0,trainType:'local'},
+    {h:10,m:49,platform:4,trainType:'local'},
+    {h:11,m:6,platform:0,trainType:'local'},
+    {h:11,m:23,platform:3,trainType:'local'},
+    {h:11,m:40,platform:0,trainType:'local'},
+    {h:11,m:57,platform:4,trainType:'local'},
+    {h:12,m:14,platform:0,trainType:'local'},
+    {h:12,m:31,platform:3,trainType:'local'},
+    {h:12,m:48,platform:0,trainType:'local'},
+    {h:13,m:5,platform:4,trainType:'local'},
+    {h:13,m:22,platform:0,trainType:'local'},
+    {h:13,m:39,platform:3,trainType:'local'},
+    {h:13,m:56,platform:0,trainType:'local'},
+    {h:14,m:13,platform:4,trainType:'local'},
+    {h:14,m:30,platform:0,trainType:'local'},
+    {h:14,m:47,platform:3,trainType:'local'},
+    {h:15,m:4,platform:0,trainType:'local'},
+    {h:15,m:21,platform:4,trainType:'local'},
+    {h:15,m:38,platform:0,trainType:'local'},
+    {h:15,m:55,platform:3,trainType:'local'},
+    {h:16,m:12,platform:0,trainType:'local'},
+    {h:16,m:29,platform:4,trainType:'local'},
+    {h:16,m:46,platform:0,trainType:'local'},
+    {h:17,m:3,platform:3,trainType:'local'},
+    {h:17,m:20,platform:0,trainType:'local'},
+    {h:17,m:37,platform:4,trainType:'local'},
+    {h:17,m:54,platform:0,trainType:'local'},
+    {h:18,m:11,platform:3,trainType:'local'},
+    {h:18,m:28,platform:0,trainType:'local'},
+    {h:18,m:45,platform:4,trainType:'local'},
+    {h:19,m:2,platform:0,trainType:'local'},
+    {h:19,m:19,platform:3,trainType:'local'},
+    {h:19,m:36,platform:0,trainType:'local'},
+    {h:19,m:53,platform:4,trainType:'local'},
+    {h:20,m:10,platform:0,trainType:'local'},
+    {h:20,m:27,platform:3,trainType:'local'},
+    {h:20,m:44,platform:0,trainType:'local'},
+    {h:21,m:1,platform:4,trainType:'local'},
+    {h:21,m:18,platform:0,trainType:'local'},
+    {h:21,m:35,platform:3,trainType:'local'},
+    {h:21,m:52,platform:0,trainType:'local'},
+    {h:22,m:9,platform:4,trainType:'local'},
+    {h:22,m:26,platform:0,trainType:'local'},
+    {h:22,m:43,platform:3,trainType:'local'},
+    {h:23,m:0,platform:0,trainType:'local'},
+    {h:23,m:20,platform:4,trainType:'local'},
+    {h:23,m:40,platform:0,trainType:'local'},
+  ]
+};
+
+/* ── ユーティリティ ── */
+const DAYS = ['日','月','火','水','木','金','土'];
+
+function pad2(n) { return String(n).padStart(2, '0'); }
+
+function formatTime(h, m) { return pad2(h) + ':' + pad2(m); }
+
+function formatRemain(diffMin) {
+  if (diffMin < 60) return { val: String(diffMin), unit: '分' };
+  const h = Math.floor(diffMin / 60);
+  const m = diffMin % 60;
+  if (m === 0) return { val: `${h}時間`, unit: '' };
+  return { val: `${h}時間${m}`, unit: '分' };
+}
+
+function getBadgeClass(trainType) {
+  if (trainType === 'semi')    return 'type-badge badge-semi';
+  if (trainType === 'express') return 'type-badge badge-exp';
+  return 'type-badge badge-local';
+}
+
+function getBadgeListClass(trainType) {
+  if (trainType === 'semi')    return 'list-badge badge-semi';
+  if (trainType === 'express') return 'list-badge badge-exp';
+  return 'list-badge badge-local';
+}
+
+function getBadgeLabel(trainType) {
+  if (trainType === 'semi')    return '準急';
+  if (trainType === 'express') return '急行';
+  return '普通';
+}
+
+function getPlatformLabel(platform) {
+  return platform === 0 ? '0番線' : `${platform}番線`;
+}
+
+/* ── 状態 ── */
+let currentDayType = 'weekday';
+
+function autoDetectDayType() {
+  const d = new Date().getDay();
+  return (d === 0 || d === 6) ? 'holiday' : 'weekday';
+}
+
+function setDayType(type) {
+  currentDayType = type;
+  document.getElementById('btn-weekday').className = 'cal-btn ' + (type === 'weekday' ? 'active' : 'inactive');
+  document.getElementById('btn-holiday').className = 'cal-btn ' + (type === 'holiday' ? 'active' : 'inactive');
+  render();
+}
+
+/* ── レンダリング ── */
+function render() {
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const trains = TIMETABLE[currentDayType];
+
+  // 現在以降の列車
+  const upcoming = trains
+    .map(t => ({ ...t, totalMin: t.h * 60 + t.m }))
+    .filter(t => t.totalMin > nowMin);
+
+  // 0番線の次
+  const next0 = upcoming.find(t => t.platform === 0);
+  // 3・4番線の次
+  const next34 = upcoming.find(t => t.platform === 3 || t.platform === 4);
+
+  // 0番線カード更新
+  if (next0) {
+    const diff = next0.totalMin - nowMin;
+    const rem = formatRemain(diff);
+    document.getElementById('p0-time').textContent = formatTime(next0.h, next0.m);
+    const badge0 = document.getElementById('p0-badge');
+    badge0.className = getBadgeClass(next0.trainType);
+    badge0.textContent = getBadgeLabel(next0.trainType);
+    document.getElementById('p0-remain').textContent = rem.val;
+    document.getElementById('p0-remain-unit').textContent = rem.unit ? '\u2009' + rem.unit : '';
+  } else {
+    document.getElementById('p0-time').textContent = '終電済';
+    document.getElementById('p0-remain').textContent = '--';
+    document.getElementById('p0-remain-unit').textContent = '';
+  }
+
+  // 3・4番線カード更新
+  if (next34) {
+    const diff = next34.totalMin - nowMin;
+    const rem = formatRemain(diff);
+    document.getElementById('p34-label').textContent = `次の列車（${next34.platform}番線）`;
+    document.getElementById('p34-time').textContent = formatTime(next34.h, next34.m);
+    const badge34 = document.getElementById('p34-badge');
+    badge34.className = getBadgeClass(next34.trainType);
+    badge34.textContent = getBadgeLabel(next34.trainType);
+    document.getElementById('p34-remain').textContent = rem.val;
+    document.getElementById('p34-remain-unit').textContent = rem.unit ? '\u2009' + rem.unit : '';
+  } else {
+    document.getElementById('p34-label').textContent = '次の列車';
+    document.getElementById('p34-time').textContent = '終電済';
+    document.getElementById('p34-remain').textContent = '--';
+    document.getElementById('p34-remain-unit').textContent = '';
+  }
+
+  // 列車リスト（5本）
+  const listEl = document.getElementById('train-list');
+  listEl.innerHTML = '';
+  upcoming.slice(0, 5).forEach(t => {
+    const diff = t.totalMin - nowMin;
+    const rem = formatRemain(diff);
+    const pbClass = t.platform === 0 ? 'platform-badge pb-0' : 'platform-badge pb-34';
+    const row = document.createElement('div');
+    row.className = 'list-row';
+    row.innerHTML = `
+      <span class="${pbClass}">${getPlatformLabel(t.platform)}</span>
+      <span class="list-time">${formatTime(t.h, t.m)}</span>
+      <span class="${getBadgeListClass(t.trainType)}">${getBadgeLabel(t.trainType)}</span>
+      <span class="list-dest">北綾瀬</span>
+      <span class="list-min">${rem.val}${rem.unit ? rem.unit + '後' : '後'}</span>
+    `;
+    listEl.appendChild(row);
+  });
+}
+
+/* ── 時計・日付更新 ── */
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = pad2(now.getHours()) + ':' + pad2(now.getMinutes());
+  document.getElementById('date-display').textContent =
+    `${now.getFullYear()}/${pad2(now.getMonth()+1)}/${pad2(now.getDate())} (${DAYS[now.getDay()]})`;
+}
+
+/* ── 初期化 ── */
+currentDayType = autoDetectDayType();
+document.getElementById('btn-weekday').className = 'cal-btn ' + (currentDayType === 'weekday' ? 'active' : 'inactive');
+document.getElementById('btn-holiday').className = 'cal-btn ' + (currentDayType === 'holiday' ? 'active' : 'inactive');
+updateClock();
+render();
+setInterval(() => { updateClock(); render(); }, 60000);
+</script>
+</body>
+</html>
