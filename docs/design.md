@@ -27,9 +27,9 @@
 
 ### 画面イメージ
 
-| 平日 | 土・休日 |
-|:---:|:---:|
-| ![平日](./images/screenshot-main.png) | ![土・休日](./images/screenshot-holiday.png) |
+| メイン画面 |
+|:---:|
+| ![メイン画面](./images/screenshot-main.png) |
 
 ---
 
@@ -67,7 +67,9 @@
 | 駅名「綾瀬」 | color `#fff`・font-size 24px・font-weight 700 |
 | ローマ字「Ayase → Kita-Ayase」 | color `#8a9bb5`・font-size 11px・margin-top 2px |
 | 現在時刻 | color `#fff`・font-size 32px・font-weight 300（秒なし・1分ごと更新） |
-| 日付 | color `#8a9bb5`・font-size 11px・右寄せ・形式：YYYY/MM/DD (曜) |
+| 日付（通常時） | color `#8a9bb5`・font-size 11px・右寄せ・形式：YYYY/MM/DD (曜) |
+| 日付（終電後・5時以降） | 「YYYY/MM/DD (曜) → 翌 MM/DD (曜)」形式で翌日を表示 |
+| 日付（深夜・5時未満） | 「YYYY/MM/DD (曜)」のみ（翌日表示なし） |
 
 ---
 
@@ -187,23 +189,35 @@
 **入力**
 
 ```typescript
-trains: Train[]
-now: { hour: number, minute: number }
+timetable: Timetable   // 平日・土休日の全データ
+dayType: DayType       // 当日のダイヤ区分
+now: Date
 ```
 
 **処理**
 
 ```
-1. 現在時刻より後の列車を抽出
-2. platform === 0 の次の列車を取得
-3. platform === 3 | 4 の次の列車を取得
-4. 上位5本のリストを生成
+1. 現在時刻より後の列車を抽出（当日ダイヤ）
+2. 結果が1本以上 → 通常表示（isNextDay: false）
+   - platform === 0 の次の列車を取得
+   - platform === 3 | 4 の次の列車を取得
+   - 上位5本のリストを生成
+3. 結果が0本（終電後）→ 翌日ダイヤに自動切替（isNextDay: true）
+   - getServiceDay(now) でサービス日を取得（0〜4時台は前日扱い）
+   - getNextDayType(serviceDay) で翌日ダイヤ区分を決定
+   - 翌日ダイヤの全列車から nextP0・nextP34・upcomingList を生成
 ```
 
 **出力**
 
 ```typescript
-{ nextP0: Train | null, nextP34: Train | null, upcomingList: Train[] }
+{
+  nextP0: Train | null
+  nextP34: Train | null
+  upcomingList: Train[]
+  isNextDay: boolean    // 終電後で翌日ダイヤを表示中
+  nextDayType: DayType  // 使用中のダイヤ区分（終電後は翌日のもの）
+}
 ```
 
 ---
@@ -310,7 +324,8 @@ ayase-kitaayase-timetable/
 │   │   ├── setup.ts               # テストセットアップ
 │   │   ├── formatTime.test.ts     # 時刻フォーマットテスト
 │   │   ├── useDayType.test.ts     # ダイヤ区分判定テスト
-│   │   └── useTrains.test.ts      # 列車フィルタリングテスト
+│   │   ├── useTrains.test.ts      # 列車フィルタリング・翌日切替テスト
+│   │   └── Header.test.tsx        # ヘッダー日付表示テスト
 │   ├── App.tsx
 │   ├── index.css
 │   └── main.tsx
@@ -391,9 +406,10 @@ git push
 
 | # | 内容 | 優先度 | 状態 |
 |---|---|---|---|
-| 1 | ユニットテスト未実装 | 🔴 | 対応予定 |
-| 2 | 終電後の翌日ダイヤ切替 | 🟡 | 未対応 |
-| 3 | オフライン対応 | ⚪ | 将来対応 |
+| 1 | ユニットテスト | 🟢 | 実装済み（38件・4ファイル） |
+| 2 | 終電後の翌日ダイヤ切替 | 🟢 | 実装済み（isNextDay フラグ・ヘッダー日付表示対応） |
+| 3 | 終電が近いとき翌日列車で5本に補完 | 🟡 | 未対応（残り列車が5本未満でも当日分のみ表示） |
+| 4 | オフライン対応 | ⚪ | 将来対応 |
 
 ---
 
@@ -403,3 +419,5 @@ git push
 |---|---|---|
 | 2026-05-04 | 1.0 | 初版作成（実装・デプロイ完了後） |
 | 2026-05-04 | 1.1 | ダイヤバッジを切替ボタン→表示バッジのみに変更・ユニットテスト追加 |
+| 2026-05-04 | 1.2 | 終電後の翌日ダイヤ自動切替・ヘッダー翌日日付表示を実装 |
+| 2026-05-05 | 1.3 | 設計書を現状実装に合わせて更新（画面イメージ・機能仕様・ファイル構成） |
