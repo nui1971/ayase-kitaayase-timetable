@@ -16,7 +16,7 @@ export const TrainRow = ({ train, remainMin }: TrainRowProps) => {
 
     return (
         <div className="flex items-center gap-2 px-3 py-[9px] rounded-[9px] bg-white/[0.04]">
-            <span className={`text-[11px] font-medium px-[7px] py-[2px] rounded shrink-0 ${platformClass}`}>
+            <span className={`text-[11px] font-medium w-[4.5rem] text-center py-[2px] rounded shrink-0 ${platformClass}`}>
                 {platformLabel}
             </span>
             <span className="text-[18px] font-light text-white min-w-[46px] shrink-0">
