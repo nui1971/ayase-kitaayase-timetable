@@ -24,7 +24,7 @@ export const TrackCard = ({ platform, train, remainMin }: TrackCardProps) => {
     const trackSub  = platform === 0 ? '綾瀬 ⇔ 北綾瀬 折り返し' : '千代田線 直通'
     const nextLabel = platform === 0 || train === null
         ? '次の列車'
-        : `次の列車（${train.platform}番線）`
+        : '次の列車（3・4番線）'
 
     return (
         <div className="flex rounded-[12px] overflow-hidden mb-[10px] border-[0.5px] border-white/[0.06]">

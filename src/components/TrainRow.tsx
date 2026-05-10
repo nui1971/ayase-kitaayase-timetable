@@ -9,7 +9,7 @@ interface TrainRowProps {
 
 export const TrainRow = ({ train, remainMin }: TrainRowProps) => {
     const isP0 = train.platform === 0
-    const platformLabel = isP0 ? '0番線' : `${train.platform}番線`
+    const platformLabel = isP0 ? '0番線' : '3・4番線'
     const platformClass = isP0
         ? 'bg-[rgba(232,112,58,0.2)] text-[#f5a07a]'
         : 'bg-[rgba(34,197,94,0.15)] text-[#7ec8a0]'
